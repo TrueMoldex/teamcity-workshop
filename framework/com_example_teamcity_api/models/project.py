@@ -1,7 +1,4 @@
-from dataclasses import dataclass, field, asdict
-
-from attr import dataclass
-
+from dataclasses import dataclass, field
 from framework.com_example_teamcity_api.models.base_model import BaseModel
 
 

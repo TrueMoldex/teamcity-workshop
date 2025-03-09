@@ -18,7 +18,7 @@ class Specification:
         return session
 
     @staticmethod
-    def super_user_auth():
+    def super_user_auth_spec():
         session = Specification.req_builder()
         superuser_token = Config.get_config().get_property("credentials", "superuser")
         base_uri = f"http://{superuser_token}@{Config.get_config().get_property('server', 'host')}:{Config.get_config().get_property('server', 'port')}"
@@ -32,6 +32,6 @@ class Specification:
     @staticmethod
     def auth_spec(user: User):
         session = Specification.req_builder()
-        base_uri = f"http://{user.user}:{user.password}@{Config.get_config().get_property('server', 'host')}:{Config.get_config().get_property('server', 'port')}"
-        session.auth = (user.user, user.password)
+        base_uri = f"http://{user.username}:{user.password}@{Config.get_config().get_property('server', 'host')}:{Config.get_config().get_property('server', 'port')}"
+        session.auth = (user.username, user.password)
         return session, base_uri

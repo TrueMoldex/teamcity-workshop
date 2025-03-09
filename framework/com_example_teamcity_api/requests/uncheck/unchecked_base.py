@@ -3,7 +3,7 @@ from framework.com_example_teamcity_api.models.base_model import BaseModel
 from framework.com_example_teamcity_api.requests.crud_interaface import CRUDInterface
 from framework.com_example_teamcity_api.requests.request import Request
 
-
+import logging
 class UncheckedBase(Request, CRUDInterface):
     def __init__(self, spec, base_uri, endpoint: Endpoint):
         super().__init__(spec, endpoint)
@@ -13,6 +13,8 @@ class UncheckedBase(Request, CRUDInterface):
     def create(self, model: BaseModel):
         url = f"{self.base_uri}{self.endpoint.url}"
         payload = model.to_dict()
+        logging.info(f"📡 Отправка запроса на: {url}")
+        logging.info(f"📨 Данные: {payload}")
         response = self.spec.post(url, json=payload, headers=self.spec.headers)
         return response
 

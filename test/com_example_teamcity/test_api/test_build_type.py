@@ -4,14 +4,17 @@ import pytest
 
 from framework.com_example_teamcity_api.enum.endpoit import Endpoint
 from framework.com_example_teamcity_api.generators.test_data_generator import TestDataGenerator
+from framework.com_example_teamcity_api.models.build_type import BuildType
+from framework.com_example_teamcity_api.models.project import Project
 
 from framework.com_example_teamcity_api.models.user import User
 from framework.com_example_teamcity_api.requests.check.checked_base import CheckedBase
 from framework.com_example_teamcity_api.spec.specification import Specification
+from test.com_example_teamcity.base_api_test import BaseApiTest
 
 
 @pytest.mark.regression
-class TestBuildType:
+class TestBuildType(BaseApiTest):
     @pytest.mark.description("User should be able ti create build type")
     @pytest.mark.positive
     @pytest.mark.crud
@@ -19,15 +22,24 @@ class TestBuildType:
         """Создаёт пользователя, проект, билд-тайп и проверяет успешное создание."""
         user = TestDataGenerator.generate(User)
         with allure.step("Create user"):
-            session_req, base_uri = Specification.super_user_auth()
-            request = CheckedBase[User](session_req, base_uri, Endpoint.USERS)
-            request.create(user)
-        # with allure.step("Create project by user"):
-
-        # @allure.step("Create build type for project by user")
-        # pass
-        # @allure.step("Check build type was created successfully with correct data")
-        pass
+            session_req, base_uri = Specification.super_user_auth_spec()
+            user_request = CheckedBase[User](session_req, base_uri, Endpoint.USERS)
+            user_request.create(user)
+        project = TestDataGenerator.generate(Project)
+        with allure.step("Create project by user"):
+            session_req, base_uri = Specification.auth_spec(user)
+            project_request = CheckedBase[Project](session_req, base_uri, Endpoint.PROJECTS)
+            response = project_request.create(project)
+            project_id = response.id
+        build_type = TestDataGenerator.generate(BuildType)
+        build_type.project = Project(id=project_id)
+        session_req, base_uri = Specification.auth_spec(user)
+        build_type_request = CheckedBase[BuildType](session_req, base_uri, Endpoint.BUILD_TYPES)
+        with allure.step("Create build type for project by user"):
+            build_type_id = build_type_request.create(build_type).id
+        with allure.step("Check build type was created successfully with correct data"):
+            created_build_type  = build_type_request.read(build_type_id)
+            self.softy.assert_equal(build_type.name, created_build_type.name, msg="билд тайп имя не корреткно")
 
     @pytest.mark.description("User should not be able to create two build type with same id")
     @pytest.mark.negative

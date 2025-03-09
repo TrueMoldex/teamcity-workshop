@@ -8,7 +8,7 @@ from framework.com_example_teamcity_api.models.user import User
 class Endpoint(Enum):
 
     BUILD_TYPES = ("/app/rest/buildTypes", BuildType)
-    PROJECT = ("/app/rest/project", Project)
+    PROJECTS = ("/app/rest/projects", Project)
     USERS = ("/app/rest/users", User)
 
     def __init__(self, url: str, model_class: type[BaseModel]):

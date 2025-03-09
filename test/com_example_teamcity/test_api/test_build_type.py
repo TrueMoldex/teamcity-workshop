@@ -1,8 +1,10 @@
+
 import allure
 import pytest
-from requests import session
 
 from framework.com_example_teamcity_api.enum.endpoit import Endpoint
+from framework.com_example_teamcity_api.generators.test_data_generator import TestDataGenerator
+
 from framework.com_example_teamcity_api.models.user import User
 from framework.com_example_teamcity_api.requests.check.checked_base import CheckedBase
 from framework.com_example_teamcity_api.spec.specification import Specification
@@ -12,16 +14,16 @@ from framework.com_example_teamcity_api.spec.specification import Specification
 class TestBuildType:
     @pytest.mark.description("User should be able ti create build type")
     @pytest.mark.positive
-    @pytest.mark.CRUD
+    @pytest.mark.crud
     def test_user_creates_build_type(self):
         """Создаёт пользователя, проект, билд-тайп и проверяет успешное создание."""
+        user = TestDataGenerator.generate(User)
         with allure.step("Create user"):
-            user = User(username="name", password="password")
             session_req, base_uri = Specification.super_user_auth()
             request = CheckedBase[User](session_req, base_uri, Endpoint.USERS)
             request.create(user)
-        # @allure.step("Create project by user")
-        # pass
+        # with allure.step("Create project by user"):
+
         # @allure.step("Create build type for project by user")
         # pass
         # @allure.step("Check build type was created successfully with correct data")
@@ -59,7 +61,6 @@ class TestBuildType:
         # @allure.step("Create build type for project1 by user(PROJECT_ADMIN)")
         # @allure.step("Check build type was created successfully")
         pass
-
 
     @pytest.mark.description("Project admin should not be able to create build type for not their project")
     @pytest.mark.negative

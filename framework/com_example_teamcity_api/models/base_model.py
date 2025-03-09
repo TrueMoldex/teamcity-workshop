@@ -1,5 +1,6 @@
-from abc import ABC
+from dataclasses import dataclass, asdict
 
-
-class BaseModel(ABC):
-    pass
+@dataclass
+class BaseModel:
+    def to_dict(self):
+        return asdict(self)

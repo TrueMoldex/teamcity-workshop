@@ -12,7 +12,8 @@ class UncheckedBase(Request, CRUDInterface):
 
     def create(self, model: BaseModel):
         url = f"{self.base_uri}{self.endpoint.url}"
-        response = self.spec.post(url, json=model.to_dict(), headers=self.spec.headers)
+        payload = model.to_dict()
+        response = self.spec.post(url, json=payload, headers=self.spec.headers)
         return response
 
     def read(self, ids: str):
@@ -22,7 +23,8 @@ class UncheckedBase(Request, CRUDInterface):
 
     def update(self, ids: str, model: BaseModel):
         url = f"{self.base_uri}{self.endpoint.url}/id:{ids}"
-        response = self.spec.put(url, json=model.to_dict(), headers=self.spec.headers)
+        payload = model.to_dict()
+        response = self.spec.put(url, json=payload, headers=self.spec.headers)
         return response
 
     def delete(self, ids: str):

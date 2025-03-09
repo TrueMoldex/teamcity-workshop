@@ -8,50 +8,30 @@ from framework.com_example_teamcity_api.models.user import User
 logging.basicConfig(level=logging.INFO)
 
 class Specification:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.__init_spec()
-        return cls._instance
-
-    def __init_spec(self):
-        config = Config.get_config()
-        self.host = config.get_property("server", "host")
-        self.port = config.get_property("server", "port")
-        self.default_headers = {
+    @staticmethod
+    def req_builder():
+        session = requests.Session()
+        session.headers.update({
             "Accept": "application/json",
             "Content-Type": "application/json"
-        }
-        # Можно создать одну сессию, если хотим переиспользовать (куки, коннекты и т.д.)
-        self.session = requests.Session()
-        self.session.headers.update(self.default_headers)
+        })
+        return session
 
-    def __req_builder(self):
-        return {
-            "base_uri": f"http://{self.host}:{self.port}",
-            "headers": self.default_headers,
-        }
+    @staticmethod
+    def super_user_auth():
+        session = Specification.req_builder()
+        superuser_token = Config.get_config().get_property("credentials", "superuser")
+        base_uri = f"http://{superuser_token}@{Config.get_config().get_property('server', 'host')}:{Config.get_config().get_property('server', 'port')}"
+        session.auth = ("", superuser_token)
 
-    def unauth_spec_request(self, endpoint: str, method: str = "GET", **kwargs) -> Response:
-        builder = self.__req_builder()
-        url = f"{builder['base_uri']}{endpoint}"
-        logging.info(f"Sending {method} request to {url} (unauth)")
-        response = self.session.request(method, url, headers=builder["headers"], **kwargs)
-        logging.info(f"Response: {response.status_code} {response.text}")
-        return response
+        return session, base_uri  # Теперь в base_uri есть суперпользователь
+    @staticmethod
+    def unauth_spec():
+        return Specification.req_builder()
 
-    def auth_spec_request(self, user: User, endpoint: str, method: str = "GET", **kwargs) -> Response:
-
-        builder = self.__req_builder()
-        url = f"{builder['base_uri']}{endpoint}"
-        logging.info(f"Sending {method} request to {url} (auth)")
-        response = self.session.request(
-            method,
-            url,
-            headers=builder["headers"],
-            auth=(user.user, user.password),
-            **kwargs)
-        logging.info(f"Response: {response.status_code} {response.text}")
-        return response
+    @staticmethod
+    def auth_spec(user: User):
+        session = Specification.req_builder()
+        base_uri = f"http://{user.user}:{user.password}@{Config.get_config().get_property('server', 'host')}:{Config.get_config().get_property('server', 'port')}"
+        session.auth = (user.user, user.password)
+        return session, base_uri

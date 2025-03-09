@@ -1,4 +1,11 @@
+import allure
 import pytest
+from requests import session
+
+from framework.com_example_teamcity_api.enum.endpoit import Endpoint
+from framework.com_example_teamcity_api.models.user import User
+from framework.com_example_teamcity_api.requests.check.checked_base import CheckedBase
+from framework.com_example_teamcity_api.spec.specification import Specification
 
 
 @pytest.mark.regression
@@ -8,12 +15,11 @@ class TestBuildType:
     @pytest.mark.CRUD
     def test_user_creates_build_type(self):
         """Создаёт пользователя, проект, билд-тайп и проверяет успешное создание."""
-        # создать пользователя
-        # создать проект
-        # создать билд тайп
-        # проверть что билд type создался успешно
-        # @allure.step("Create user")
-        # pass
+        with allure.step("Create user"):
+            user = User(username="name", password="password")
+            session_req, base_uri = Specification.super_user_auth()
+            request = CheckedBase[User](session_req, base_uri, Endpoint.USERS)
+            request.create(user)
         # @allure.step("Create project by user")
         # pass
         # @allure.step("Create build type for project by user")

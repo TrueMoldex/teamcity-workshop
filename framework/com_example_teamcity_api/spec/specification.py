@@ -35,9 +35,6 @@ class Specification:
         }
 
     def unauth_spec_request(self, endpoint: str, method: str = "GET", **kwargs) -> Response:
-        """
-        Запрос без аутентификации, только базовый URL (host:port).
-        """
         builder = self.__req_builder()
         url = f"{builder['base_uri']}{endpoint}"
         logging.info(f"Sending {method} request to {url} (unauth)")
@@ -46,9 +43,7 @@ class Specification:
         return response
 
     def auth_spec_request(self, user: User, endpoint: str, method: str = "GET", **kwargs) -> Response:
-        """
-        Запрос с аутентификацией через URL: http://user:password@host:port.
-        """
+
         builder = self.__req_builder()
         url = f"{builder['base_uri']}{endpoint}"
         logging.info(f"Sending {method} request to {url} (auth)")

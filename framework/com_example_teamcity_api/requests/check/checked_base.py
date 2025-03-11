@@ -15,6 +15,7 @@ class CheckedBase(Request, CRUDInterface, Generic[T]):
     def __init__(self, spec, base_uri, endpoint: Endpoint):
         super().__init__(spec, endpoint)
         self.base_uri = base_uri
+        self.endpoint = endpoint
         self.unchecked_base = UncheckedBase(spec, base_uri, endpoint)
 
     def _validate_and_extract(self, response, model_class: type[T]) -> T:

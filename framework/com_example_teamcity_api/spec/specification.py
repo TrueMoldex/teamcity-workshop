@@ -13,7 +13,7 @@ class Specification:
         session = requests.Session()
         session.headers.update({
             "Accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         })
         return session
 

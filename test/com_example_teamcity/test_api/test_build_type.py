@@ -9,6 +9,7 @@ from framework.com_example_teamcity_api.models.project import Project
 
 from framework.com_example_teamcity_api.models.user import User
 from framework.com_example_teamcity_api.requests.check.checked_base import CheckedBase
+from framework.com_example_teamcity_api.requests.check_request import CheckedRequests
 from framework.com_example_teamcity_api.spec.specification import Specification
 from test.com_example_teamcity.base_api_test import BaseApiTest
 
@@ -19,27 +20,23 @@ class TestBuildType(BaseApiTest):
     @pytest.mark.positive
     @pytest.mark.crud
     def test_user_creates_build_type(self):
-        """Создаёт пользователя, проект, билд-тайп и проверяет успешное создание."""
         user = TestDataGenerator.generate(User)
-        with allure.step("Create user"):
-            session_req, base_uri = Specification.super_user_auth_spec()
-            user_request = CheckedBase[User](session_req, base_uri, Endpoint.USERS)
-            user_request.create(user)
+
+        self.super_user_check_requests.get_request(Endpoint.USERS).create(user)
+
+        user_requests = CheckedRequests(*Specification.auth_spec(user))
+
         project = TestDataGenerator.generate(Project)
-        with allure.step("Create project by user"):
-            session_req, base_uri = Specification.auth_spec(user)
-            project_request = CheckedBase[Project](session_req, base_uri, Endpoint.PROJECTS)
-            response = project_request.create(project)
-            project_id = response.id
+
+        project = user_requests.get_request(Endpoint.PROJECTS).create(project)
+
         build_type = TestDataGenerator.generate(BuildType)
-        build_type.project = Project(id=project_id)
-        session_req, base_uri = Specification.auth_spec(user)
-        build_type_request = CheckedBase[BuildType](session_req, base_uri, Endpoint.BUILD_TYPES)
-        with allure.step("Create build type for project by user"):
-            build_type_id = build_type_request.create(build_type).id
-        with allure.step("Check build type was created successfully with correct data"):
-            created_build_type  = build_type_request.read(build_type_id)
-            self.softy.assert_equal(build_type.name, created_build_type.name, msg="билд тайп имя не корреткно")
+        build_type.project = project #По-другому не получается почему-то  404 и ошибку с локатором вывыодит
+        user_requests.get_request(Endpoint.BUILD_TYPES).create(build_type)
+
+        created_build_type = user_requests.get_request(Endpoint.BUILD_TYPES).read(build_type.id)
+
+        self.softy.assert_equal(build_type.name, created_build_type.name, "Build Type name is correct")
 
     @pytest.mark.description("User should not be able to create two build type with same id")
     @pytest.mark.negative

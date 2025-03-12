@@ -10,6 +10,7 @@ from framework.com_example_teamcity_api.models.project import Project
 from framework.com_example_teamcity_api.models.user import User
 from framework.com_example_teamcity_api.requests.check.checked_base import CheckedBase
 from framework.com_example_teamcity_api.requests.check_request import CheckedRequests
+from framework.com_example_teamcity_api.requests.uncheck_request import UncheckedRequests
 from framework.com_example_teamcity_api.spec.specification import Specification
 from test.com_example_teamcity.base_api_test import BaseApiTest
 
@@ -31,7 +32,7 @@ class TestBuildType(BaseApiTest):
         project = user_requests.get_request(Endpoint.PROJECTS).create(project)
 
         build_type = TestDataGenerator.generate(BuildType)
-        build_type.project = project #По-другому не получается почему-то  404 и ошибку с локатором вывыодит
+        build_type.project = project #По-другому не получается почему-то  404 и ошибку с локатором выводит
         user_requests.get_request(Endpoint.BUILD_TYPES).create(build_type)
 
         created_build_type = user_requests.get_request(Endpoint.BUILD_TYPES).read(build_type.id)
@@ -43,21 +44,29 @@ class TestBuildType(BaseApiTest):
     @pytest.mark.crud
     def test_user_creates_two_build_types_with_the_same_id(self):
         """Создаёт пользователя, проект, два билд-тайпа с одинаковым id и проверяет, что второй не создаётся."""
-        # создать пользователя
-        # создать проект
-        # создать билд тайп
-        # создать второй билд тайп с id первого
-        # проверть что билд type  не создался успешно
-        # @allure.step("Create user")
-        # pass
-        # @allure.step("Create project by user")
-        # pass
-        # @allure.step("Create build type for project by user")
-        # pass
-        # @allure.step("Create build type for project by user with same id")
-        # pass
-        # @allure.step("Check build type was  not created with bad request")
-        pass
+        user = TestDataGenerator.generate(User)
+
+        self.super_user_check_requests.get_request(Endpoint.USERS).create(user)
+
+        user_requests = CheckedRequests(*Specification.auth_spec(user))
+
+        project = TestDataGenerator.generate(Project)
+        project = user_requests.get_request(Endpoint.PROJECTS).create(project)
+
+        build_type1 = TestDataGenerator.generate(BuildType)
+        build_type1.project = project
+        build_type2 = TestDataGenerator.generate(BuildType, None, {"id": build_type1.id})
+        build_type2.project = project
+
+        user_requests.get_request(Endpoint.BUILD_TYPES).create(build_type1)
+
+        user_uncheck_request = UncheckedRequests(*Specification.auth_spec(user))
+        unchecked_response = user_uncheck_request.get_request(Endpoint.BUILD_TYPES).create(build_type2)
+
+        expected_error = f'The build configuration / template ID "{build_type1.id}" is already used by another configuration or template'
+
+        self.softy.assert_equal(unchecked_response.status_code, 400, "Status code should be 400 for duplicate build type")
+        self.softy.assert_true(expected_error in unchecked_response.text, f"Response should contain error message: {expected_error}")
 
     @pytest.mark.description("Project admin should be able to create build type for their project")
     @pytest.mark.positive

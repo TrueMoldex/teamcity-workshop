@@ -7,7 +7,7 @@ from framework.com_example_teamcity_api.models.steps import Steps
 
 @dataclass
 class BuildType(BaseModel):
-    id: str = field(default="", metadata={"random": True})
+    id: str = field(default="", metadata={"parameterizable": True, "random": True})
     name: str = field(default="", metadata={"random": True})
     project: Project = field(default_factory=Project)
     steps: Steps = field(default_factory=Steps)

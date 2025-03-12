@@ -38,11 +38,6 @@ class TestDataGenerator:
                 continue
 
             # Parameterizable – если помечено, берём значение из параметров (если есть)
-            elif meta.get("parameterizable"):
-                # Здесь можно реализовать логику, аналогичную override_dict,
-                # если требуется последовательное использование переданных параметров.
-                value = None
-                setattr(instance, field_name, value)
 
             # Random – генерируем случайные данные
             elif meta.get("random"):

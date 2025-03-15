@@ -1,22 +1,30 @@
+import random
 from dataclasses import fields, is_dataclass
+from typing import Type, TypeVar, Dict
+
 from framework.com_example_teamcity_api.generators.random_data import RandomData
 from framework.com_example_teamcity_api.models.base_model import BaseModel
-from typing import Type, TypeVar, Dict
-import random
+from framework.com_example_teamcity_api.models.build_type import BuildType
+from framework.com_example_teamcity_api.models.project import Project
+from framework.com_example_teamcity_api.models.test_data import TestData
+from framework.com_example_teamcity_api.models.user import User
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class TestDataGenerator:
     @staticmethod
-    def generate(model_class: Type[T], generated_models: Dict[Type[BaseModel], BaseModel] = None, *parameters) -> T:
+    def generate(model_class: Type[T], override_dict=None,
+                 generated_models: Dict[Type[BaseModel], BaseModel] = None) -> T:
+        if override_dict is None:
+            override_dict = {}
         if generated_models is None:
             generated_models = {}
 
         instance = model_class()
 
         # Если передан параметр-словарь, используем его для перезаписи полей
-        override_dict = parameters[0] if parameters and isinstance(parameters[0], dict) else {}
+        override_dict = override_dict if isinstance(override_dict, dict) else {}
 
         for field_info in fields(instance):
             meta = field_info.metadata
@@ -65,3 +73,19 @@ class TestDataGenerator:
                 generated_models[nested_type] = nested_instance
 
         return instance
+
+    @staticmethod
+    def generate_test_data() -> 'TestData':
+        """
+        Генерирует объект TestData, рекурсивно создавая все поля,
+        которые являются наследниками BaseModel.
+        """
+        try:
+            generated_models = {}
+            user = TestDataGenerator.generate(User, generated_models)
+            project = TestDataGenerator.generate(Project, generated_models)
+            build_type = TestDataGenerator.generate(BuildType, {"project": project})
+
+            return TestData(user=user, project=project, build_type=build_type)
+        except Exception as e:
+            raise RuntimeError("Cannot generate test data") from e

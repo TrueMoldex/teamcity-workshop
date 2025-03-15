@@ -21,8 +21,15 @@ class TestDataGenerator:
         if generated_models is None:
             generated_models = {}
 
-        instance = model_class()
+        override_dict = {str(k): v for k, v in override_dict.items() if isinstance(k, str)}
 
+        if hasattr(model_class, "id") and "id" not in override_dict:
+            if model_class == User:  # User в TeamCity ожидает числовой ID
+                override_dict["id"] = random.randint(1000, 99999)  # Генерация случайного числа
+            else:
+                override_dict["id"] = RandomData.get_string()
+
+        instance = model_class(**override_dict)
         # Если передан параметр-словарь, используем его для перезаписи полей
         override_dict = override_dict if isinstance(override_dict, dict) else {}
 
@@ -75,17 +82,20 @@ class TestDataGenerator:
         return instance
 
     @staticmethod
-    def generate_test_data() -> 'TestData':
-        """
-        Генерирует объект TestData, рекурсивно создавая все поля,
-        которые являются наследниками BaseModel.
-        """
+    def generate_test_data() -> TestData:
+        """Генерирует объект TestData, рекурсивно создавая все поля."""
         try:
-            generated_models = {}
-            user = TestDataGenerator.generate(User, generated_models)
-            project = TestDataGenerator.generate(Project, generated_models)
-            build_type = TestDataGenerator.generate(BuildType, {"project": project})
+            instance = TestData()
+            generated_models: Dict[Type[BaseModel], BaseModel] = {}
 
-            return TestData(user=user, project=project, build_type=build_type)
+            for field_info in fields(instance):
+                field_type = field_info.type
+
+                if issubclass(field_type, BaseModel):
+                    generated_model = TestDataGenerator.generate(field_type, {}, generated_models)
+                    setattr(instance, field_info.name, generated_model)
+                    generated_models[field_type] = generated_model
+
+            return instance
         except Exception as e:
             raise RuntimeError("Cannot generate test data") from e

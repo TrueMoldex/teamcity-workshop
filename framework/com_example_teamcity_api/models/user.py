@@ -1,10 +1,13 @@
 from dataclasses import dataclass, field, asdict
+from typing import Optional
+
 from framework.com_example_teamcity_api.models.base_model import BaseModel
 from framework.com_example_teamcity_api.models.roles import Roles
 
 
 @dataclass
 class User(BaseModel):
+    id: Optional[str] = None
     username: str = field(default= "", metadata={"random": True})
     password: str = field(default="", metadata={"random": True})
     roles: Roles = field(default_factory=Roles)

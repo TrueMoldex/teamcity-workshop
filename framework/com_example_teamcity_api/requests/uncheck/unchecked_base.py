@@ -31,5 +31,6 @@ class UncheckedBase(Request, CRUDInterface):
 
     def delete(self, ids: str):
         url = f"{self.base_uri}{self.endpoint.url}/id:{ids}"
+        logging.info(f"📡 Отправка запроса на: {url}")
         response = self.spec.delete(url, headers=self.spec.headers)
         return response

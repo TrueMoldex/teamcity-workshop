@@ -1,7 +1,10 @@
 from typing import TypeVar, Generic
 from dataclasses import fields
 import logging
+from venv import create
+
 from framework.com_example_teamcity_api.enum.endpoit import Endpoint
+from framework.com_example_teamcity_api.generators.test_data_storage import TestDataStorage
 from framework.com_example_teamcity_api.models.base_model import BaseModel
 from framework.com_example_teamcity_api.requests.crud_interaface import CRUDInterface
 from framework.com_example_teamcity_api.requests.request import Request
@@ -33,7 +36,9 @@ class CheckedBase(Request, CRUDInterface, Generic[T]):
 
     def create(self, model: BaseModel) -> T:
         response = self.unchecked_base.create(model)
-        return self._validate_and_extract(response, self.endpoint.model_class)
+        created_model = self._validate_and_extract(response, self.endpoint.model_class)
+        TestDataStorage().add_created_entity(self.endpoint, created_model)
+        return created_model
 
     def read(self, ids: str) -> T:
         response = self.unchecked_base.read(ids)

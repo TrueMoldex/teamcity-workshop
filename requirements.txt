@@ -5,3 +5,4 @@ black==24.8.0
 allure-pytest==2.13.5
 allure-python-commons~=2.13.5
 attrs~=25.1.0
+pytest-httpserver==1.1.2

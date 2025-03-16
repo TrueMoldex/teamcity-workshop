@@ -25,6 +25,7 @@ class Specification:
         session.auth = ("", superuser_token)
 
         return session, base_uri  # Теперь в base_uri есть суперпользователь
+
     @staticmethod
     def unauth_spec():
         return Specification.req_builder()
@@ -34,4 +35,11 @@ class Specification:
         session = Specification.req_builder()
         base_uri = f"http://{user.username}:{user.password}@{Config.get_config().get_property('server', 'host')}:{Config.get_config().get_property('server', 'port')}"
         session.auth = (user.username, user.password)
+        return session, base_uri
+
+    @staticmethod
+    def mock_spec():
+        session = Specification.req_builder()
+        base_uri = "http://localhost:8090"
+        print(base_uri)
         return session, base_uri

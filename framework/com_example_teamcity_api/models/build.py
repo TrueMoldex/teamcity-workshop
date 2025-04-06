@@ -1,10 +1,7 @@
-from dataclasses import dataclass
-
-from framework.com_example_teamcity_api.models.base_model import BaseModel
+from framework.com_example_teamcity_api.models.base_model import BaseModelPD
 
 
-@dataclass
-class Build(BaseModel):
+class Build(BaseModelPD):
     state: str
     status: str
-    id : str  = ''
+    id: str = ""

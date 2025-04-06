@@ -28,8 +28,13 @@ class CheckedBase(Request, CRUDInterface, Generic[T]):
         logging.info(f"✅ Успешный ответ: {response.status_code}, Тело: {response.text}")
         if model_class:
             data = response.json()
-            allowed_fields = {field.name for field in fields(model_class)}
+            # allowed_fields = {field.name for field in fields(model_class)}
+            allowed_fields = set(model_class.__fields__.keys())
             filtered_data = {k: v for k, v in data.items() if k in allowed_fields}
+
+            if "id" in filtered_data and isinstance(filtered_data["id"], int):
+                filtered_data["id"] = str(filtered_data["id"])
+
             return model_class(**filtered_data)
         else:
             return response.text

@@ -1,8 +1,11 @@
-from dataclasses import dataclass, field
-from framework.com_example_teamcity_api.models.base_model import BaseModel
+from typing import Optional
 
+from framework.com_example_teamcity_api.models.base_model import BaseModelPD
 
-@dataclass
-class Project(BaseModel):
-  id: str = field(default="", metadata={"random": True})
-  name: str = field(default="", metadata={"random": True})
+class ParentProjectLocator(BaseModelPD):
+    id: str
+
+class Project(BaseModelPD):
+    id: str = ""
+    name: str = ""
+    parentProjectLocator: Optional[ParentProjectLocator] = None

@@ -1,101 +1,122 @@
 import random
-from dataclasses import fields, is_dataclass
-from typing import Type, TypeVar, Dict
+import string
+from typing import get_type_hints, Union, get_origin, get_args, Type
 
-from framework.com_example_teamcity_api.generators.random_data import RandomData
-from framework.com_example_teamcity_api.models.base_model import BaseModel
-from framework.com_example_teamcity_api.models.build_type import BuildType
-from framework.com_example_teamcity_api.models.project import Project
-from framework.com_example_teamcity_api.models.test_data import TestData
-from framework.com_example_teamcity_api.models.user import User
+from pydantic import BaseModel
 
-T = TypeVar("T", bound=BaseModel)
+# Ваш базовый класс для Pydantic моделей (если он называется BaseModelPD)
+# Если вы используете pydantic.BaseModel напрямую, замените BaseModelPD на BaseModel.
+from framework.com_example_teamcity_api.models.base_model import BaseModelPD
 
 
-class TestDataGenerator:
-    @staticmethod
-    def generate(model_class: Type[T], override_dict=None,
-                 generated_models: Dict[Type[BaseModel], BaseModel] = None) -> T:
-        if override_dict is None:
-            override_dict = {}
-        if generated_models is None:
-            generated_models = {}
+def generate_random_string(length=8) -> str:
+    """Генерация случайной строки из букв (a-z, A-Z)."""
+    letters = string.ascii_letters
+    return ''.join(random.choice(letters) for _ in range(length))
 
-        override_dict = {str(k): v for k, v in override_dict.items() if isinstance(k, str)}
 
-        if hasattr(model_class, "id") and "id" not in override_dict:
-            if model_class == User:  # User в TeamCity ожидает числовой ID
-                override_dict["id"] = random.randint(1000, 99999)  # Генерация случайного числа
+def generate_random_digits(length=8) -> str:
+    """Генерация строки, состоящей только из цифр."""
+    digits = string.digits
+    return ''.join(random.choice(digits) for _ in range(length))
+
+
+def generate_random_project_id(length=6) -> str:
+    """
+    Генерация корректного идентификатора проекта:
+    ID должен начинаться с латинской буквы, далее могут идти буквы, цифры и подчёркивания.
+    """
+    letters = string.ascii_letters
+    valid_chars = string.ascii_letters + string.digits + "_"
+    first = random.choice(letters)
+    rest = ''.join(random.choice(valid_chars) for _ in range(length - 1))
+    return first + rest
+
+
+def generate_instance(cls: Type[BaseModelPD], overrides: dict = None) -> BaseModelPD:
+    """
+    Рекурсивно создаёт экземпляр Pydantic-модели `cls`, заполняя поля случайными значениями.
+    Если для поля передан override, используется его значение.
+
+    Особенности:
+    - Для модели User: поле "id" генерируется как строка из цифр.
+    - Для модели Project: поле "id" генерируется как корректный проектный ID.
+    - Для полей с типом List[...] если элемент является Pydantic-моделью, генерируется список с одним элементом.
+    """
+    if overrides is None:
+        overrides = {}
+
+    field_values = {}
+    type_hints = get_type_hints(cls)
+
+    for field_name, field_type in cls.__annotations__.items():
+        # Если значение переопределено, используем его.
+        if field_name in overrides:
+            field_values[field_name] = overrides[field_name]
+            continue
+
+        # Особая логика для поля "id"
+        if field_name == "id":
+            if cls.__name__ == "Project":
+                field_values[field_name] = generate_random_project_id()
+                continue
+            if cls.__name__ == "User":
+                field_values[field_name] = generate_random_digits()
+                continue
+            # Для остальных моделей, если id — строка, генерируем случайную строку.
+            if "str" in str(field_type):
+                field_values[field_name] = generate_random_string()
+                continue
+
+        # Для поля "name" — используем значение по умолчанию.
+        if field_name == "name" and field_type is str:
+            field_values[field_name] = "default_name"
+            continue
+
+        # Если модель Role, задаём значения по умолчанию для roleId и scope.
+        if cls.__name__ == "Role":
+            if field_name == "roleId":
+                field_values[field_name] = "SYSTEM_ADMIN"
+                continue
+            if field_name == "scope":
+                field_values[field_name] = "g"
+                continue
+
+        # Если поле имеет тип List[...] или Optional[List[...]]
+        origin = get_origin(field_type)
+        if origin == list:
+            item_type = get_args(field_type)[0]
+            # Если элемент является Pydantic-моделью, генерируем один элемент.
+            if isinstance(item_type, type) and issubclass(item_type, BaseModelPD):
+                field_values[field_name] = [generate_instance(item_type)]
             else:
-                override_dict["id"] = RandomData.get_string()
+                field_values[field_name] = []
+            continue
 
-        instance = model_class(**override_dict)
-        # Если передан параметр-словарь, используем его для перезаписи полей
-        override_dict = override_dict if isinstance(override_dict, dict) else {}
+        # Если поле является вложенной Pydantic-моделью
+        if isinstance(field_type, type) and issubclass(field_type, BaseModelPD):
+            field_values[field_name] = generate_instance(field_type)
+            continue
 
-        for field_info in fields(instance):
-            meta = field_info.metadata
-            field_name = field_info.name
-            field_type = field_info.type
+        # Если поле является Optional[...] (но не List), и содержит str, генерируем строку.
+        if get_origin(field_type) is Union and type(None) in field_type.__args__:
+            if str in field_type.__args__:
+                field_values[field_name] = generate_random_string()
+            else:
+                field_values[field_name] = None
+            continue
 
-            # Если значение для этого поля передано явно, устанавливаем его и пропускаем генерацию
-            if field_name in override_dict:
-                setattr(instance, field_name, override_dict[field_name])
-                continue
+        # Если поле — просто str
+        if field_type is str:
+            field_values[field_name] = generate_random_string()
+            continue
 
-            # Если поле уже сгенерировано ранее, переиспользуем его
-            if field_type in generated_models:
-                setattr(instance, field_name, generated_models[field_type])
-                continue
+        # Если поле — целое число
+        if field_type is int:
+            field_values[field_name] = random.randint(1, 999)
+            continue
 
-            # Optional – если помечено как optional, пропускаем
-            if meta.get("optional"):
-                continue
+        # Если ничего не подошло — оставляем None (Pydantic может использовать дефолт, если он указан в модели)
+        field_values[field_name] = None
 
-            # Parameterizable – если помечено, берём значение из параметров (если есть)
-
-            # Random – генерируем случайные данные
-            elif meta.get("random"):
-                if field_type == str:
-                    setattr(instance, field_name, RandomData.get_string())
-                elif field_type == int:
-                    setattr(instance, field_name, random.randint(0, 1000))
-                else:
-                    # Если тип не простой, можно оставить его без изменений
-                    pass
-
-            # Если поле — объект BaseModel, генерируем его рекурсивно
-            elif is_dataclass(field_type) and issubclass(field_type, BaseModel):
-                nested_instance = TestDataGenerator.generate(field_type, generated_models)
-                setattr(instance, field_name, nested_instance)
-                generated_models[field_type] = nested_instance
-
-            # Если поле — список объектов BaseModel, создаём список из одного элемента
-            elif (getattr(field_type, "__origin__", None) is list and
-                  is_dataclass(field_type.__args__[0]) and
-                  issubclass(field_type.__args__[0], BaseModel)):
-                nested_type = field_type.__args__[0]
-                nested_instance = TestDataGenerator.generate(nested_type, generated_models)
-                setattr(instance, field_name, [nested_instance])
-                generated_models[nested_type] = nested_instance
-
-        return instance
-
-    @staticmethod
-    def generate_test_data() -> TestData:
-        """Генерирует объект TestData, рекурсивно создавая все поля."""
-        try:
-            instance = TestData()
-            generated_models: Dict[Type[BaseModel], BaseModel] = {}
-
-            for field_info in fields(instance):
-                field_type = field_info.type
-
-                if issubclass(field_type, BaseModel):
-                    generated_model = TestDataGenerator.generate(field_type, {}, generated_models)
-                    setattr(instance, field_info.name, generated_model)
-                    generated_models[field_type] = generated_model
-
-            return instance
-        except Exception as e:
-            raise RuntimeError("Cannot generate test data") from e
+    return cls(**field_values)

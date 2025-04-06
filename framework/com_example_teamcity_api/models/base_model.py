@@ -1,6 +1,6 @@
-from dataclasses import dataclass, asdict
+from pydantic import BaseModel
 
-@dataclass
-class BaseModel:
+class BaseModelPD(BaseModel):
+    """Единый базовый класс, чтобы иметь метод to_dict()."""
     def to_dict(self):
-        return asdict(self)
+        return self.dict()

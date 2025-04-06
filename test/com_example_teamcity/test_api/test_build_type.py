@@ -1,7 +1,7 @@
 import pytest
 
 from framework.com_example_teamcity_api.enum.endpoit import Endpoint
-from framework.com_example_teamcity_api.generators.test_data_generator import TestDataGenerator
+from framework.com_example_teamcity_api.generators.test_data_generator import generate_instance
 from framework.com_example_teamcity_api.models.build_type import BuildType
 from framework.com_example_teamcity_api.models.project import Project
 from framework.com_example_teamcity_api.requests.check_request import CheckedRequests
@@ -17,6 +17,7 @@ class TestBuildType(BaseApiTest):
     @pytest.mark.positive
     @pytest.mark.crud
     def test_user_creates_build_type(self):
+
         self.super_user_check_requests.get_request(Endpoint.USERS).create(self.test_data.user)
 
         user_requests = CheckedRequests(*Specification.auth_spec(self.test_data.user))
@@ -36,9 +37,12 @@ class TestBuildType(BaseApiTest):
     def test_user_creates_two_build_types_with_the_same_id(self):
         """Создаёт пользователя, проект, два билд-тайпа с одинаковым id и проверяет, что второй не создаётся."""
 
-        build_type_with_same_id = TestDataGenerator.generate(
-            BuildType, {"id": self.test_data.build_type.id, "project": self.test_data.project},
-            generated_models={Project: self.test_data.project}
+        build_type_with_same_id = generate_instance(
+            BuildType,
+            overrides={
+                "id": self.test_data.build_type.id,
+                "project": self.test_data.project
+            }
         )
 
         self.super_user_check_requests.get_request(Endpoint.USERS).create(self.test_data.user)

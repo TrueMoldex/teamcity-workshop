@@ -16,7 +16,7 @@ class CRUDInterface(ABC):
     @abstractmethod
     def update(self, ids: str, model: BaseModel):
         pass
-    
+
     @abstractmethod
     def delete(self, ids: str):
         pass

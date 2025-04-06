@@ -6,6 +6,7 @@ from framework.com_example_teamcity_api.models.base_model import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
+
 class CheckedRequests:
     def __init__(self, spec, base_uri):
         self.requests: Dict[Endpoint, CheckedBase] = {

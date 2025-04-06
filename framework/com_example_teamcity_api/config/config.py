@@ -4,6 +4,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+
 class Config:
     _instance = None
     _CONFIG_FILE = "config.ini"
@@ -16,7 +17,9 @@ class Config:
 
     def __load_properties(self, filename):
         # Предполагаем, что файл находится в директории resources, расположенной относительно main
-        config_path = Path(__file__).resolve().parent.parent.parent / "resources" / filename
+        config_path = (
+            Path(__file__).resolve().parent.parent.parent / "resources" / filename
+        )
         if not config_path.exists():
             raise FileNotFoundError(f"Config file '{filename}' not found!")
         self.properties = configparser.ConfigParser()

@@ -4,15 +4,20 @@ import logging
 from venv import create
 
 from framework.com_example_teamcity_api.enum.endpoit import Endpoint
-from framework.com_example_teamcity_api.generators.test_data_storage import TestDataStorage
+from framework.com_example_teamcity_api.generators.test_data_storage import (
+    TestDataStorage,
+)
 from framework.com_example_teamcity_api.models.base_model import BaseModel
 from framework.com_example_teamcity_api.requests.crud_interaface import CRUDInterface
 from framework.com_example_teamcity_api.requests.request import Request
 import requests
 
-from framework.com_example_teamcity_api.requests.uncheck.unchecked_base import UncheckedBase
+from framework.com_example_teamcity_api.requests.uncheck.unchecked_base import (
+    UncheckedBase,
+)
 
 T = TypeVar("T", bound=BaseModel)
+
 
 class CheckedBase(Request, CRUDInterface, Generic[T]):
     def __init__(self, spec, base_uri, endpoint: Endpoint):
@@ -24,8 +29,12 @@ class CheckedBase(Request, CRUDInterface, Generic[T]):
     def _validate_and_extract(self, response, model_class: type[T]) -> T:
         if response.status_code != requests.codes.ok:
             logging.error(f"❌ Ошибка {response.status_code}: {response.text}")
-            raise Exception(f"Unexpected status code: {response.status_code}, Response: {response.text}")
-        logging.info(f"✅ Успешный ответ: {response.status_code}, Тело: {response.text}")
+            raise Exception(
+                f"Unexpected status code: {response.status_code}, Response: {response.text}"
+            )
+        logging.info(
+            f"✅ Успешный ответ: {response.status_code}, Тело: {response.text}"
+        )
         if model_class:
             data = response.json()
             # allowed_fields = {field.name for field in fields(model_class)}

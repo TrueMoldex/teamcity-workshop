@@ -12,13 +12,13 @@ from framework.com_example_teamcity_api.models.base_model import BaseModelPD
 def generate_random_string(length=8) -> str:
     """Генерация случайной строки из букв (a-z, A-Z)."""
     letters = string.ascii_letters
-    return ''.join(random.choice(letters) for _ in range(length))
+    return "".join(random.choice(letters) for _ in range(length))
 
 
 def generate_random_digits(length=8) -> str:
     """Генерация строки, состоящей только из цифр."""
     digits = string.digits
-    return ''.join(random.choice(digits) for _ in range(length))
+    return "".join(random.choice(digits) for _ in range(length))
 
 
 def generate_random_project_id(length=6) -> str:
@@ -29,7 +29,7 @@ def generate_random_project_id(length=6) -> str:
     letters = string.ascii_letters
     valid_chars = string.ascii_letters + string.digits + "_"
     first = random.choice(letters)
-    rest = ''.join(random.choice(valid_chars) for _ in range(length - 1))
+    rest = "".join(random.choice(valid_chars) for _ in range(length - 1))
     return first + rest
 
 

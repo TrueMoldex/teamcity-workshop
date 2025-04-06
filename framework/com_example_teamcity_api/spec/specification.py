@@ -7,14 +7,17 @@ from framework.com_example_teamcity_api.models.user import User
 
 logging.basicConfig(level=logging.INFO)
 
+
 class Specification:
     @staticmethod
     def req_builder():
         session = requests.Session()
-        session.headers.update({
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        })
+        session.headers.update(
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        )
         return session
 
     @staticmethod

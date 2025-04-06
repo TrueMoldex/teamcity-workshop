@@ -1,7 +1,11 @@
 import pytest
 
-from framework.com_example_teamcity_api.generators.test_data_generator import generate_instance
-from framework.com_example_teamcity_api.generators.test_data_storage import TestDataStorage
+from framework.com_example_teamcity_api.generators.test_data_generator import (
+    generate_instance,
+)
+from framework.com_example_teamcity_api.generators.test_data_storage import (
+    TestDataStorage,
+)
 from framework.com_example_teamcity_api.models.test_data import TestData
 from framework.com_example_teamcity_api.requests.check_request import CheckedRequests
 from framework.com_example_teamcity_api.spec.specification import Specification

@@ -4,6 +4,8 @@ from framework.com_example_teamcity_api.requests.crud_interaface import CRUDInte
 from framework.com_example_teamcity_api.requests.request import Request
 
 import logging
+
+
 class UncheckedBase(Request, CRUDInterface):
     def __init__(self, spec, base_uri, endpoint: Endpoint):
         super().__init__(spec, endpoint)

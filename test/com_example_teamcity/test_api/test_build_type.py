@@ -1,17 +1,13 @@
-
-import allure
 import pytest
 
 from framework.com_example_teamcity_api.enum.endpoit import Endpoint
 from framework.com_example_teamcity_api.generators.test_data_generator import TestDataGenerator
 from framework.com_example_teamcity_api.models.build_type import BuildType
 from framework.com_example_teamcity_api.models.project import Project
-
-from framework.com_example_teamcity_api.models.user import User
-from framework.com_example_teamcity_api.requests.check.checked_base import CheckedBase
 from framework.com_example_teamcity_api.requests.check_request import CheckedRequests
 from framework.com_example_teamcity_api.requests.uncheck_request import UncheckedRequests
 from framework.com_example_teamcity_api.spec.specification import Specification
+from framework.com_example_teamcity_api.spec.validation_response_specifications import ValidationResponseSpecifications
 from test.com_example_teamcity.base_api_test import BaseApiTest
 
 
@@ -58,12 +54,11 @@ class TestBuildType(BaseApiTest):
         user_uncheck_request = UncheckedRequests(*Specification.auth_spec(self.test_data.user))
         unchecked_response = user_uncheck_request.get_request(Endpoint.BUILD_TYPES).create(build_type_with_same_id)
 
-        expected_error = f'The build configuration / template ID "{self.test_data.build_type.id}" is already used by another configuration or template'
-        self.softy.assert_equal(unchecked_response.status_code, 400,
-                                "Status code should be 400 for duplicate build type")
-
-        self.softy.assert_true(expected_error in unchecked_response.text,
-                               f"Response should contain error message: {expected_error}")
+        ValidationResponseSpecifications.check_duplicate_build_type_error(
+            self.test_data.build_type.id,
+            unchecked_response,
+            self.softy
+        )
 
     @pytest.mark.description("Project admin should be able to create build type for their project")
     @pytest.mark.positive
